@@ -8,9 +8,10 @@ use object_store::DynObjectStore;
 use service_grpc_catalog::CatalogService;
 use service_grpc_namespace::NamespaceService;
 use service_grpc_object_store::ObjectStoreService;
-use service_grpc_schema::SchemaService;
 use service_grpc_table::TableService;
 use std::sync::Arc;
+
+mod schema_service;
 
 /// This type manages all gRPC services exposed by a `router` using the RPC write path.
 #[derive(Debug)]
@@ -31,8 +32,8 @@ impl RpcWriteGrpcDelegate {
     /// Acquire a [`SchemaService`] gRPC service implementation.
     ///
     /// [`SchemaService`]: generated_types::influxdata::iox::schema::v1::schema_service_server::SchemaService.
-    pub fn schema_service(&self) -> SchemaService {
-        SchemaService::new(Arc::clone(&self.catalog))
+    pub fn schema_service(&self) -> schema_service::SchemaService {
+        schema_service::SchemaService::new(Arc::clone(&self.catalog))
     }
 
     /// Acquire a [`CatalogService`] gRPC service implementation.

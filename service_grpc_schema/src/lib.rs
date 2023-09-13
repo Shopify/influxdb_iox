@@ -20,7 +20,7 @@ use std::{ops::DerefMut, sync::Arc};
 
 use generated_types::influxdata::iox::schema::v1::*;
 use iox_catalog::interface::{
-    get_schema_by_name, get_schema_by_namespace_and_table, Catalog, SoftDeletedRows,
+    get_schema_by_name, get_schema_by_namespace_and_table, Catalog, RepoCollection, SoftDeletedRows,
 };
 use observability_deps::tracing::warn;
 use tonic::{Request, Response, Status};
@@ -45,37 +45,47 @@ impl schema_service_server::SchemaService for SchemaService {
         request: Request<GetSchemaRequest>,
     ) -> Result<Response<GetSchemaResponse>, Status> {
         let mut repos = self.catalog.repositories().await;
-
         let req = request.into_inner();
 
-        let schema = match req.table {
-            Some(table_name) => {
-                get_schema_by_namespace_and_table(
-                    &req.namespace,
-                    &table_name,
-                    repos.deref_mut(),
-                    SoftDeletedRows::ExcludeDeleted,
-                )
-                .await
-            }
-            None => {
-                get_schema_by_name(
-                    &req.namespace,
-                    repos.deref_mut(),
-                    SoftDeletedRows::ExcludeDeleted,
-                )
-                .await
-            }
-        }
-        .map_err(|e| {
-            warn!(error=%e, %req.namespace, "failed to retrieve namespace schema");
-            Status::not_found(e.to_string())
-        })?;
+        let schema = get_schema_from_catalog(repos.as_mut(), &req.namespace, req.table.as_deref())
+            .await
+            .map_err(|e| {
+                warn!(error=%e, %req.namespace, "failed to retrieve namespace schema");
+                Status::not_found(e.to_string())
+            })?;
 
         Ok(Response::new(GetSchemaResponse {
-            schema: Some((&schema).into()),
+            schema: Some(schema),
         }))
     }
+}
+
+pub async fn get_schema_from_catalog(
+    mut repos: &mut dyn RepoCollection,
+    namespace: &str,
+    table: Option<&str>,
+) -> Result<NamespaceSchema, iox_catalog::interface::Error> {
+    let namespace_schema = match table {
+        Some(table_name) => {
+            get_schema_by_namespace_and_table(
+                namespace,
+                table_name,
+                repos.deref_mut(),
+                SoftDeletedRows::ExcludeDeleted,
+            )
+            .await?
+        }
+        None => {
+            get_schema_by_name(
+                namespace,
+                repos.deref_mut(),
+                SoftDeletedRows::ExcludeDeleted,
+            )
+            .await?
+        }
+    };
+
+    Ok(NamespaceSchema::from(&namespace_schema))
 }
 
 #[cfg(test)]

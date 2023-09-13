@@ -94,7 +94,7 @@ impl TestContextBuilder {
 pub struct TestContext {
     client: Arc<MockWriteClient>,
     http_delegate: HttpDelegateStack,
-    grpc_delegate: RpcWriteGrpcDelegate,
+    grpc_delegate: RpcWriteGrpcDelegateStack,
     catalog: Arc<dyn Catalog>,
     metrics: Arc<metric::Registry>,
 
@@ -114,7 +114,11 @@ type HttpDelegateStack = HttpDelegate<
             Chain<
                 Chain<
                     RetentionValidator,
-                    SchemaValidator<Arc<ReadThroughCache<Arc<ShardedCache<MemoryNamespaceCache>>>>>,
+                    Arc<
+                        SchemaValidator<
+                            Arc<ReadThroughCache<Arc<ShardedCache<MemoryNamespaceCache>>>>,
+                        >,
+                    >,
                 >,
                 Partitioner,
             >,
@@ -129,6 +133,9 @@ type HttpDelegateStack = HttpDelegate<
         NamespaceSchemaResolver<Arc<ReadThroughCache<Arc<ShardedCache<MemoryNamespaceCache>>>>>,
     >,
 >;
+
+type RpcWriteGrpcDelegateStack =
+    RpcWriteGrpcDelegate<ReadThroughCache<Arc<ShardedCache<MemoryNamespaceCache>>>>;
 
 /// A [`router`] stack configured with the various DML handlers using mock catalog backends.
 impl TestContext {
@@ -155,8 +162,11 @@ impl TestContext {
             Arc::clone(&catalog),
         ));
 
-        let schema_validator =
-            SchemaValidator::new(Arc::clone(&catalog), Arc::clone(&ns_cache), &metrics);
+        let schema_validator = Arc::new(SchemaValidator::new(
+            Arc::clone(&catalog),
+            Arc::clone(&ns_cache),
+            &metrics,
+        ));
 
         let retention_validator = RetentionValidator::new();
 
@@ -173,7 +183,7 @@ impl TestContext {
         let parallel_write = FanOutAdaptor::new(rpc_writer);
 
         let handler_stack = retention_validator
-            .and_then(schema_validator)
+            .and_then(Arc::clone(&schema_validator))
             .and_then(partitioner)
             .and_then(parallel_write);
 
@@ -190,8 +200,11 @@ impl TestContext {
             write_request_unifier,
         );
 
-        let grpc_delegate =
-            RpcWriteGrpcDelegate::new(Arc::clone(&catalog), Arc::new(InMemory::default()));
+        let grpc_delegate = RpcWriteGrpcDelegate::new(
+            Arc::clone(&catalog),
+            Arc::new(InMemory::default()),
+            ns_cache,
+        );
 
         Self {
             client,
@@ -229,7 +242,7 @@ impl TestContext {
     }
 
     /// Get a reference to the test context's grpc delegate.
-    pub fn grpc_delegate(&self) -> &RpcWriteGrpcDelegate {
+    pub fn grpc_delegate(&self) -> &RpcWriteGrpcDelegateStack {
         &self.grpc_delegate
     }
 

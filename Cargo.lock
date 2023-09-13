@@ -4915,7 +4915,6 @@ dependencies = [
  "service_grpc_catalog",
  "service_grpc_namespace",
  "service_grpc_object_store",
- "service_grpc_schema",
  "service_grpc_table",
  "sharder",
  "smallvec",

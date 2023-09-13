@@ -10,20 +10,20 @@ pub mod http;
 /// The [`RpcWriteRouterServer`] manages the lifecycle and contains all state for a
 /// `router-rpc-write` server instance.
 #[derive(Debug)]
-pub struct RpcWriteRouterServer<D, N> {
+pub struct RpcWriteRouterServer<D, N, C> {
     metrics: Arc<metric::Registry>,
     trace_collector: Option<Arc<dyn TraceCollector>>,
 
     http: HttpDelegate<D, N>,
-    grpc: RpcWriteGrpcDelegate,
+    grpc: RpcWriteGrpcDelegate<C>,
 }
 
-impl<D, N> RpcWriteRouterServer<D, N> {
+impl<D, N, C> RpcWriteRouterServer<D, N, C> {
     /// Initialise a new [`RpcWriteRouterServer`] using the provided HTTP and gRPC
     /// handlers.
     pub fn new(
         http: HttpDelegate<D, N>,
-        grpc: RpcWriteGrpcDelegate,
+        grpc: RpcWriteGrpcDelegate<C>,
         metrics: Arc<metric::Registry>,
         trace_collector: Option<Arc<dyn TraceCollector>>,
     ) -> Self {
@@ -51,7 +51,7 @@ impl<D, N> RpcWriteRouterServer<D, N> {
     }
 
     /// Get a reference to the router grpc delegate.
-    pub fn grpc(&self) -> &RpcWriteGrpcDelegate {
+    pub fn grpc(&self) -> &RpcWriteGrpcDelegate<C> {
         &self.grpc
     }
 }

@@ -1,7 +1,8 @@
 //! gRPC service implementations for `router`.
 
+use crate::namespace_cache::NamespaceCache;
 use generated_types::influxdata::iox::{
-    catalog::v1::*, namespace::v1::*, object_store::v1::*, table::v1::*,
+    catalog::v1::*, namespace::v1::*, object_store::v1::*, schema::v1::*, table::v1::*,
 };
 use iox_catalog::interface::Catalog;
 use object_store::DynObjectStore;
@@ -15,25 +16,34 @@ mod schema_service;
 
 /// This type manages all gRPC services exposed by a `router` using the RPC write path.
 #[derive(Debug)]
-pub struct RpcWriteGrpcDelegate {
+pub struct RpcWriteGrpcDelegate<C> {
     catalog: Arc<dyn Catalog>,
     object_store: Arc<DynObjectStore>,
+    namespace_cache: Arc<C>,
 }
 
-impl RpcWriteGrpcDelegate {
+impl<C> RpcWriteGrpcDelegate<C>
+where
+    C: NamespaceCache<ReadError = iox_catalog::interface::Error> + 'static,
+{
     /// Create a new gRPC handler
-    pub fn new(catalog: Arc<dyn Catalog>, object_store: Arc<DynObjectStore>) -> Self {
+    pub fn new(
+        catalog: Arc<dyn Catalog>,
+        object_store: Arc<DynObjectStore>,
+        namespace_cache: Arc<C>,
+    ) -> Self {
         Self {
             catalog,
             object_store,
+            namespace_cache,
         }
     }
 
     /// Acquire a [`SchemaService`] gRPC service implementation.
     ///
     /// [`SchemaService`]: generated_types::influxdata::iox::schema::v1::schema_service_server::SchemaService.
-    pub fn schema_service(&self) -> schema_service::SchemaService {
-        schema_service::SchemaService::new(Arc::clone(&self.catalog))
+    pub fn schema_service(&self) -> impl schema_service_server::SchemaService {
+        schema_service::SchemaService::new(Arc::clone(&self.namespace_cache))
     }
 
     /// Acquire a [`CatalogService`] gRPC service implementation.

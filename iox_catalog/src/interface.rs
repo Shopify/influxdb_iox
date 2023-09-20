@@ -57,7 +57,12 @@ pub enum Error {
     #[snafu(display("foreign key violation: {}", source))]
     ForeignKeyViolation { source: sqlx::Error },
 
-    #[snafu(display("column {} is type {} but write has type {}", name, existing, new))]
+    #[snafu(display(
+        "column {} is type {} but schema update has type {}",
+        name,
+        existing,
+        new
+    ))]
     ColumnTypeMismatch {
         name: String,
         existing: ColumnType,

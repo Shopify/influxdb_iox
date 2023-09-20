@@ -1,13 +1,19 @@
 //! Check validity of schema changes against a centralised schema store, maintaining an in-memory
 //! cache of all observed schemas.
 
-use std::{collections::BTreeSet, sync::Arc};
+use std::{
+    borrow::Cow,
+    collections::{BTreeMap, BTreeSet},
+    sync::Arc,
+};
 
-use data_types::{NamespaceId, NamespaceName, NamespaceSchema};
-use iox_catalog::interface::Catalog;
+use data_types::{ColumnType, NamespaceId, NamespaceName, NamespaceSchema, TableSchema};
+use iox_catalog::interface::{Catalog, Error as CatalogError};
 use metric::U64Counter;
 use observability_deps::tracing::*;
 use thiserror::Error;
+
+use crate::namespace_cache::NamespaceCache;
 
 /// Errors emitted during schema validation.
 #[derive(Debug, Error)]
@@ -100,7 +106,10 @@ pub struct SchemaValidator<C> {
     pub(crate) schema_conflict: U64Counter,
 }
 
-impl<C> SchemaValidator<C> {
+impl<C> SchemaValidator<C>
+where
+    C: NamespaceCache<ReadError = iox_catalog::interface::Error> + 'static,
+{
     /// Initialise a new [`SchemaValidator`] decorator, loading schemas from
     /// `catalog` and the provided `ns_cache`.
     pub fn new(catalog: Arc<dyn Catalog>, ns_cache: C, metrics: &metric::Registry) -> Self {
@@ -189,6 +198,58 @@ impl<C> SchemaValidator<C> {
             }
         }
         SchemaError::ServiceLimit(Box::new(e))
+    }
+
+    /// For an existing table with the given name in the specified namespace, merge the columns
+    /// given into the existing schema. Used by bulk data import to ensure columns exist with the
+    /// expected type before adding data to avoid getting type errors during ingest.
+    pub async fn upsert_schema(
+        &self,
+        namespace: &NamespaceName<'static>,
+        namespace_schema: &NamespaceSchema,
+        table_name: &str,
+        table_schema: &TableSchema,
+        // This is a `BTreeMap` to get a consistent ordering and consistent failures if multiple
+        // columns have problems.
+        upsert_columns: BTreeMap<String, ColumnType>,
+    ) -> Result<Option<TableSchema>, SchemaError> {
+        let namespace_id = namespace_schema.id;
+        let column_names = upsert_columns.keys().map(|k| k.as_str()).collect();
+
+        // We aren't creating any new tables in this path, so we only need to validate that these
+        // columns won't put the table over the column limit.
+        validate_column_limit(
+            table_name,
+            table_schema.column_names(),
+            column_names,
+            namespace_schema.max_columns_per_table.get() as usize,
+        )
+        .map_err(|e| self.record_service_protection_limit_error(e, namespace, namespace_id))?;
+
+        // The (potentially updated) TableSchema to return to the caller.
+        let mut table = Cow::Borrowed(table_schema);
+        let mut repos = self.catalog.repositories().await;
+
+        iox_catalog::validate_and_insert_columns(
+            upsert_columns
+                .iter()
+                .map(|(name, column_type)| (name, *column_type)),
+            table_name,
+            &mut table,
+            repos.as_mut(),
+        )
+        .await
+        .map_err(|e| match e.err() {
+            CatalogError::ColumnTypeMismatch { .. } => SchemaError::Conflict(e),
+            CatalogError::ColumnCreateLimitError { .. }
+            | CatalogError::TableCreateLimitError { .. } => SchemaError::ServiceLimit(Box::new(e)),
+            _ => SchemaError::UnexpectedCatalogError(e.into_err()),
+        })?;
+
+        match table {
+            Cow::Owned(v) => Ok(Some(v)),
+            Cow::Borrowed(_) => Ok(None),
+        }
     }
 }
 

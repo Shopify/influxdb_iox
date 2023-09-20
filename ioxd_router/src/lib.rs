@@ -371,10 +371,13 @@ pub async fn create_router_server_type(
     // # Schema validator
     //
     // Initialise and instrument the schema validator
-    let schema_validator =
-        SchemaValidator::new(Arc::clone(&catalog), Arc::clone(&ns_cache), &metrics);
-    let schema_validator =
-        InstrumentationDecorator::new("schema_validator", &metrics, schema_validator);
+    let schema_validator = Arc::new(SchemaValidator::new(
+        Arc::clone(&catalog),
+        Arc::clone(&ns_cache),
+        &metrics,
+    ));
+    let dml_schema_validator =
+        InstrumentationDecorator::new("schema_validator", &metrics, Arc::clone(&schema_validator));
 
     // # Retention validator
     //
@@ -421,7 +424,7 @@ pub async fn create_router_server_type(
     //
     // Build the chain of DML handlers that forms the request processing pipeline
     let handler_stack = retention_validator
-        .and_then(schema_validator)
+        .and_then(dml_schema_validator)
         .and_then(partitioner)
         // Once writes have been partitioned, they are processed in parallel.
         //
@@ -482,7 +485,7 @@ pub async fn create_router_server_type(
     // Initialize the gRPC API delegate that creates the services relevant to the RPC
     // write router path and use it to create the relevant `RpcWriteRouterServer` and
     // `RpcWriteRouterServerType`.
-    let grpc = RpcWriteGrpcDelegate::new(catalog, object_store, ns_cache);
+    let grpc = RpcWriteGrpcDelegate::new(catalog, object_store, ns_cache, schema_validator);
 
     let router_server =
         RpcWriteRouterServer::new(http, grpc, metrics, common_state.trace_collector());

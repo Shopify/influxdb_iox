@@ -1,6 +1,6 @@
 //! gRPC service implementations for `router`.
 
-use crate::namespace_cache::NamespaceCache;
+use crate::{namespace_cache::NamespaceCache, schema_validator::SchemaValidator};
 use generated_types::influxdata::iox::{
     catalog::v1::*, namespace::v1::*, object_store::v1::*, schema::v1::*, table::v1::*,
 };
@@ -20,6 +20,7 @@ pub struct RpcWriteGrpcDelegate<C> {
     catalog: Arc<dyn Catalog>,
     object_store: Arc<DynObjectStore>,
     namespace_cache: Arc<C>,
+    schema_validator: Arc<SchemaValidator<Arc<C>>>,
 }
 
 impl<C> RpcWriteGrpcDelegate<C>
@@ -31,11 +32,13 @@ where
         catalog: Arc<dyn Catalog>,
         object_store: Arc<DynObjectStore>,
         namespace_cache: Arc<C>,
+        schema_validator: Arc<SchemaValidator<Arc<C>>>,
     ) -> Self {
         Self {
             catalog,
             object_store,
             namespace_cache,
+            schema_validator,
         }
     }
 
@@ -43,7 +46,10 @@ where
     ///
     /// [`SchemaService`]: generated_types::influxdata::iox::schema::v1::schema_service_server::SchemaService.
     pub fn schema_service(&self) -> impl schema_service_server::SchemaService {
-        schema_service::SchemaService::new(Arc::clone(&self.namespace_cache))
+        schema_service::SchemaService::new(
+            Arc::clone(&self.namespace_cache),
+            Arc::clone(&self.schema_validator),
+        )
     }
 
     /// Acquire a [`CatalogService`] gRPC service implementation.

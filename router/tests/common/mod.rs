@@ -114,7 +114,11 @@ type HttpDelegateStack = HttpDelegate<
             Chain<
                 Chain<
                     RetentionValidator,
-                    SchemaValidator<Arc<ReadThroughCache<Arc<ShardedCache<MemoryNamespaceCache>>>>>,
+                    Arc<
+                        SchemaValidator<
+                            Arc<ReadThroughCache<Arc<ShardedCache<MemoryNamespaceCache>>>>,
+                        >,
+                    >,
                 >,
                 Partitioner,
             >,
@@ -158,8 +162,11 @@ impl TestContext {
             Arc::clone(&catalog),
         ));
 
-        let schema_validator =
-            SchemaValidator::new(Arc::clone(&catalog), Arc::clone(&ns_cache), &metrics);
+        let schema_validator = Arc::new(SchemaValidator::new(
+            Arc::clone(&catalog),
+            Arc::clone(&ns_cache),
+            &metrics,
+        ));
 
         let retention_validator = RetentionValidator::new();
 
@@ -176,7 +183,7 @@ impl TestContext {
         let parallel_write = FanOutAdaptor::new(rpc_writer);
 
         let handler_stack = retention_validator
-            .and_then(schema_validator)
+            .and_then(Arc::clone(&schema_validator))
             .and_then(partitioner)
             .and_then(parallel_write);
 
@@ -197,6 +204,7 @@ impl TestContext {
             Arc::clone(&catalog),
             Arc::new(InMemory::default()),
             ns_cache,
+            schema_validator,
         );
 
         Self {

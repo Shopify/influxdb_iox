@@ -98,6 +98,7 @@ fn generate_grpc_types(root: &Path) -> Result<()> {
         .extern_path(".google.protobuf", "::pbjson_types")
         .btree_map([
             ".influxdata.iox.ingester.v1.IngesterQueryResponseMetadata.unpersisted_partitions",
+            ".influxdata.iox.schema.v1.UpsertSchemaRequest.columns",
         ])
         .type_attribute(".influxdata.iox.partition_template", "#[derive(Hash)]");
 

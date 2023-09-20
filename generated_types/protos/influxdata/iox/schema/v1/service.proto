@@ -5,6 +5,9 @@ option go_package = "github.com/influxdata/iox/schema/v1";
 service SchemaService {
   // Get the schema for a namespace and, optionally, a table within that namespace
   rpc GetSchema(GetSchemaRequest) returns (GetSchemaResponse);
+
+  // Upsert the schema for the specified namespace and table
+  rpc UpsertSchema(UpsertSchemaRequest) returns (UpsertSchemaResponse);
 }
 
 message GetSchemaRequest {
@@ -17,6 +20,21 @@ message GetSchemaRequest {
 }
 
 message GetSchemaResponse {
+  NamespaceSchema schema = 1;
+}
+
+message UpsertSchemaRequest {
+  // The namespace in which to upsert the schema
+  string namespace = 1;
+
+  // The table for which to upsert the schema
+  string table = 2;
+
+  // Map of Column Name -> Column Type to upsert into this table's schema
+  map<string, ColumnSchema.ColumnType> columns = 3;
+}
+
+message UpsertSchemaResponse {
   NamespaceSchema schema = 1;
 }
 
@@ -40,7 +58,7 @@ message NamespaceSchema {
 message TableSchema {
   // Table ID
   int64 id = 1;
-  // Map of Column Name -> Table Schema
+  // Map of Column Name -> Column Schema
   map<string, ColumnSchema> columns = 2;
 }
 
@@ -54,15 +72,15 @@ message ColumnSchema {
 
   // Column data type.
   enum ColumnType {
-        // An unknown column data type.
-        COLUMN_TYPE_UNSPECIFIED = 0;
+      // An unknown column data type.
+      COLUMN_TYPE_UNSPECIFIED = 0;
 
-        COLUMN_TYPE_I64 = 1;
-        COLUMN_TYPE_U64 = 2;
-        COLUMN_TYPE_F64 = 3;
-        COLUMN_TYPE_BOOL = 4;
-        COLUMN_TYPE_STRING = 5;
-        COLUMN_TYPE_TIME = 6;
-        COLUMN_TYPE_TAG = 7;
-    }
+      COLUMN_TYPE_I64 = 1;
+      COLUMN_TYPE_U64 = 2;
+      COLUMN_TYPE_F64 = 3;
+      COLUMN_TYPE_BOOL = 4;
+      COLUMN_TYPE_STRING = 5;
+      COLUMN_TYPE_TIME = 6;
+      COLUMN_TYPE_TAG = 7;
+  }
 }

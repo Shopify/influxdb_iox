@@ -224,9 +224,16 @@ where
     Ok(())
 }
 
+/// Given an iterator of `(column_name, column_type)` to validate, this function ensures all the
+/// columns match the existing `TableSchema` in `table`. If the column does not already exist in
+/// `table`, it is created and the `table` is changed to the `Cow::Owned` variant.
+///
+/// This function pushes schema additions through to the backend catalog, and relies on the catalog
+/// to serialize concurrent additions of a given column, ensuring only one type is ever accepted
+/// per column.
 // &mut Cow is used to avoid a copy, so allow it
 #[allow(clippy::ptr_arg)]
-async fn validate_and_insert_columns<R>(
+pub async fn validate_and_insert_columns<R>(
     columns: impl Iterator<Item = (&String, ColumnType)> + Send,
     table_name: &str,
     table: &mut Cow<'_, TableSchema>,
@@ -354,7 +361,7 @@ pub mod test_helpers {
     use crate::RepoCollection;
     use data_types::{
         partition_template::TablePartitionTemplateOverride, ColumnId, ColumnSet, CompactionLevel,
-        Namespace, NamespaceName, ParquetFileParams, Partition, Table, Timestamp,
+        Namespace, NamespaceName, ParquetFileParams, Partition, Table, TableSchema, Timestamp,
     };
     use uuid::Uuid;
 
@@ -403,6 +410,18 @@ pub mod test_helpers {
                     .unwrap(),
                 namespace.id,
             )
+            .await
+            .unwrap()
+    }
+
+    /// Load or create an arbitrary table schema in the same way that a write implicitly creates a
+    /// table, that is, with a time column.
+    pub async fn arbitrary_table_schema_load_or_create<R: RepoCollection + ?Sized>(
+        repos: &mut R,
+        name: &str,
+        namespace: &Namespace,
+    ) -> TableSchema {
+        crate::table_load_or_create(repos, namespace.id, &namespace.partition_template, name)
             .await
             .unwrap()
     }

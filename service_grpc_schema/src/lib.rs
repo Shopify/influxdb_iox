@@ -1,4 +1,5 @@
-//! Implementation of the schema gRPC service
+//! Implementation of the read-only parts of the schema gRPC service, appropriate for any service
+//! other than the router. All schema modifications should go through the router.
 
 #![deny(rustdoc::broken_intra_doc_links, rust_2018_idioms)]
 #![warn(
@@ -57,6 +58,15 @@ impl schema_service_server::SchemaService for SchemaService {
         Ok(Response::new(GetSchemaResponse {
             schema: Some(schema),
         }))
+    }
+
+    async fn upsert_schema(
+        &self,
+        _request: Request<UpsertSchemaRequest>,
+    ) -> Result<Response<UpsertSchemaResponse>, Status> {
+        Err(Status::unimplemented(
+            "Modification operations are only supported by the router",
+        ))
     }
 }
 
@@ -217,5 +227,24 @@ mod tests {
             "table does_not_exist not found",
         )
         .await;
+    }
+
+    #[tokio::test]
+    async fn upsert_not_implemented_by_default() {
+        let grpc = service_setup(|_repos| async {}.boxed()).await;
+
+        // attempt to upsert, which isn't supported in this implementation
+        let request = UpsertSchemaRequest {
+            namespace: "arbitrary".to_string(),
+            table: "arbitrary".to_string(),
+            columns: [("temperature".to_string(), ColumnType::I64 as i32)].into(),
+        };
+
+        let status = grpc.upsert_schema(Request::new(request)).await.unwrap_err();
+        assert_eq!(status.code(), Code::Unimplemented);
+        assert_eq!(
+            status.message(),
+            "Modification operations are only supported by the router"
+        );
     }
 }

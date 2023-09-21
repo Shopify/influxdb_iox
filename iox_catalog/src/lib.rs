@@ -19,7 +19,7 @@
 // Workaround for "unused crate" lint false positives.
 use workspace_hack as _;
 
-use crate::interface::{ColumnTypeMismatchSnafu, Error, RepoCollection, Result};
+use crate::interface::{Error, RepoCollection, Result};
 use data_types::{
     partition_template::{NamespacePartitionTemplateOverride, TablePartitionTemplateOverride},
     ColumnType, NamespaceId, NamespaceSchema, Partition, TableSchema, TransitionPartitionId,
@@ -150,9 +150,7 @@ where
     let mut schema = Cow::Borrowed(schema);
 
     for (table_name, batch) in tables {
-        validate_mutable_batch(batch, table_name, &mut schema, repos)
-            .await
-            .map_err(|e| TableScopedError(table_name.to_string(), e))?;
+        validate_mutable_batch(batch, table_name, &mut schema, repos).await?;
     }
 
     match schema {
@@ -168,7 +166,7 @@ async fn validate_mutable_batch<R>(
     table_name: &str,
     schema: &mut Cow<'_, NamespaceSchema>,
     repos: &mut R,
-) -> Result<()>
+) -> Result<(), TableScopedError>
 where
     R: RepoCollection + ?Sized,
 {
@@ -185,7 +183,8 @@ where
             // catalog to populate the cache.
             let table =
                 table_load_or_create(repos, schema.id, &schema.partition_template, table_name)
-                    .await?;
+                    .await
+                    .map_err(|e| TableScopedError(table_name.to_string(), e))?;
 
             assert!(schema
                 .to_mut()
@@ -206,6 +205,7 @@ where
     validate_and_insert_columns(
         mb.columns()
             .map(|(name, col)| (name, col.influx_type().into())),
+        table_name,
         &mut table,
         repos,
     )
@@ -228,9 +228,10 @@ where
 #[allow(clippy::ptr_arg)]
 async fn validate_and_insert_columns<R>(
     columns: impl Iterator<Item = (&String, ColumnType)> + Send,
+    table_name: &str,
     table: &mut Cow<'_, TableSchema>,
     repos: &mut R,
-) -> Result<()>
+) -> Result<(), TableScopedError>
 where
     R: RepoCollection + ?Sized,
 {
@@ -250,12 +251,14 @@ where
             Some(existing) => {
                 // The column schema and the column in the schema change are of
                 // different types.
-                return ColumnTypeMismatchSnafu {
-                    name,
-                    existing: existing.column_type,
-                    new: column_type,
-                }
-                .fail();
+                return Err(TableScopedError(
+                    table_name.to_string(),
+                    Error::ColumnTypeMismatch {
+                        name: name.to_string(),
+                        existing: existing.column_type,
+                        new: column_type,
+                    },
+                ));
             }
             None => {
                 // The column does not exist in the cache, add it to the column
@@ -273,7 +276,8 @@ where
         repos
             .columns()
             .create_or_get_many_unchecked(table.id, column_batch)
-            .await?
+            .await
+            .map_err(|e| TableScopedError(table_name.to_string(), e))?
             .into_iter()
             .for_each(|c| table.to_mut().add_column(c));
     }

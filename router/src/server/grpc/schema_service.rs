@@ -29,7 +29,7 @@ where
     ) -> Result<Response<GetSchemaResponse>, Status> {
         let req = request.into_inner();
 
-        let namespace_name = NamespaceName::try_from(req.namespace.clone())
+        let namespace_name = NamespaceName::try_from(req.namespace)
             .map_err(|e| Status::invalid_argument(e.to_string()))?;
 
         let schema = self
@@ -37,7 +37,7 @@ where
             .get_schema(&namespace_name)
             .await
             .map_err(|e| {
-                warn!(error=%e, %req.namespace, "failed to retrieve namespace schema");
+                warn!(error=%e, %namespace_name, "failed to retrieve namespace schema");
                 Status::not_found(e.to_string())
             })?;
 

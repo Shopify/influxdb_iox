@@ -47,6 +47,7 @@ impl FlightSQLPlanner {
         cmd: FlightSQLCommand,
         ctx: &IOxSessionContext,
     ) -> Result<SchemaRef> {
+        println!("chunchun FlightSQLPlanner - get_schema cmd:{cmd:?}\n\n");
         let namespace_name = namespace_name.into();
         debug!(%namespace_name, %cmd, "Handling flightsql get_flight_info (get schema)");
 

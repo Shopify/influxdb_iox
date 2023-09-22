@@ -277,6 +277,7 @@ public class Main {
         System.out.println("supportsConvert - SMALLINT to INTEGER: " + md.supportsConvert(java.sql.Types.SMALLINT, java.sql.Types.INTEGER));
         System.out.println("supportsConvert - SMALLINT to REAL: " + md.supportsConvert(java.sql.Types.SMALLINT, java.sql.Types.REAL));
         System.out.println("supportsConvert - SMALLINT to TINYINT: " + md.supportsConvert(java.sql.Types.SMALLINT, java.sql.Types.TINYINT));
+        System.out.println("supportsConvert - BIT to CHAR: " + md.supportsConvert(java.sql.Types.BIT, java.sql.Types.CHAR));
         System.out.println("supportsCoreSQLGrammar: " + md.supportsCoreSQLGrammar());
         System.out.println("supportsCorrelatedSubqueries: " + md.supportsCorrelatedSubqueries());
         System.out.println("supportsDataDefinitionAndDataManipulationTransactions: " + md.supportsDataDefinitionAndDataManipulationTransactions());

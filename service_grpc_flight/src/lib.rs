@@ -676,13 +676,13 @@ where
         let authz_token = get_flight_authz(request.metadata());
 
         print!("chunchun handshake - request: {request:?}\n");
-        let request = request
-            .into_inner()
-            .message()
-            .await?
-            .context(InvalidHandshakeSnafu)?;
+        // let request = request
+        //     .into_inner()
+        //     .message()
+        //     .await?
+        //     .context(InvalidHandshakeSnafu)?;
 
-        // let request = request.into_inner().message().await?;
+        let request = request.into_inner().message().await?;
 
         // The handshake method is used for authentication. IOx ignores the
         // username and returns the password itself as the token to use for
@@ -698,28 +698,44 @@ where
             .map_err(|e| tonic::Status::invalid_argument(e.to_string()))?;
 
         print!("response header: {response_header:?}\n");
-        // let response = match request {
-        //     Some(request) => HandshakeResponse {
-        //         protocol_version: request.protocol_version,
-        //         payload: request.payload,
-        //     },
-        //     None => HandshakeResponse::default(),
-        // };
-        let response = HandshakeResponse {
-            protocol_version: request.protocol_version,
-            payload: request.payload,
+        let resl = match request {
+            Some(request) => {
+                let response = HandshakeResponse {
+                    protocol_version: request.protocol_version,
+                    payload: request.payload,
+                };
+                let output = futures::stream::iter(std::iter::once(Ok(response)));
+                let mut response = Response::new(Box::pin(output) as Self::HandshakeStream);
+                if let Some(header) = response_header {
+                    response.metadata_mut().insert("authorization", header);
+                }
+                print!("chunchun service_grpc_flight handshake - OK response\n");
+                Ok(response)
+            }
+            None => {
+                let output =
+                    futures::stream::iter(std::iter::once(Ok(HandshakeResponse::default())));
+                let response = Response::new(Box::pin(output) as Self::HandshakeStream);
+                Ok(response)
+            }
         };
+
+        resl
         // let response = HandshakeResponse {
         //     protocol_version: 0,
         //     payload: Bytes::new(),
         // };
-        let output = futures::stream::iter(std::iter::once(Ok(response)));
-        let mut response = Response::new(Box::pin(output) as Self::HandshakeStream);
-        if let Some(header) = response_header {
-            response.metadata_mut().insert("authorization", header);
-        }
-        print!("chunchun service_grpc_flight handshake - OK response\n");
-        Ok(response)
+        // let response = HandshakeResponse {
+        //     protocol_version: request.protocol_version,
+        //     payload: request.payload,
+        // };
+        // let output = futures::stream::iter(std::iter::once(Ok(response)));
+        // let mut response = Response::new(Box::pin(output) as Self::HandshakeStream);
+        // if let Some(header) = response_header {
+        //     response.metadata_mut().insert("authorization", header);
+        // }
+        // print!("chunchun service_grpc_flight handshake - OK response\n");
+        // Ok(response)
     }
 
     async fn list_flights(

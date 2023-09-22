@@ -34,6 +34,62 @@ use meta::{
     SQL_INFO_STRING_FUNCTIONS, SQL_INFO_SYSTEM_FUNCTIONS,
 };
 
+static SQL_SUPPORTS_CONVERT_MAP: Lazy<HashMap<i32, Vec<i32>>> = Lazy::new(|| {
+    [
+        (
+            SqlSupportsConvert::SqlConvertTinyint as i32,
+            vec![
+                SqlSupportsConvert::SqlConvertBigint as i32,
+                SqlSupportsConvert::SqlConvertChar as i32,
+                SqlSupportsConvert::SqlConvertFloat as i32,
+                SqlSupportsConvert::SqlConvertInteger as i32,
+                SqlSupportsConvert::SqlConvertReal as i32,
+                SqlSupportsConvert::SqlConvertSmallint as i32,
+            ],
+        ),
+        (
+            SqlSupportsConvert::SqlConvertBit as i32,
+            vec![
+                SqlSupportsConvert::SqlConvertBigint as i32,
+                SqlSupportsConvert::SqlConvertChar as i32,
+                SqlSupportsConvert::SqlConvertFloat as i32,
+                SqlSupportsConvert::SqlConvertInteger as i32,
+                SqlSupportsConvert::SqlConvertReal as i32,
+                SqlSupportsConvert::SqlConvertSmallint as i32,
+                SqlSupportsConvert::SqlConvertVarchar as i32,
+            ],
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect()
+
+    // let mut convert: HashMap<i32, Vec<i32>> = HashMap::new();
+    // convert.insert(
+    //     SqlSupportsConvert::SqlConvertTinyint as i32,
+    //     vec![
+    //         SqlSupportsConvert::SqlConvertBigint as i32,
+    //         SqlSupportsConvert::SqlConvertChar as i32,
+    //         SqlSupportsConvert::SqlConvertFloat as i32,
+    //         SqlSupportsConvert::SqlConvertInteger as i32,
+    //         SqlSupportsConvert::SqlConvertReal as i32,
+    //         SqlSupportsConvert::SqlConvertSmallint as i32,
+    //     ],
+    // );
+    // convert.insert(
+    //     SqlSupportsConvert::SqlConvertSmallint as i32,
+    //     vec![
+    //         SqlSupportsConvert::SqlConvertBigint as i32,
+    //         SqlSupportsConvert::SqlConvertChar as i32,
+    //         SqlSupportsConvert::SqlConvertFloat as i32,
+    //         SqlSupportsConvert::SqlConvertInteger as i32,
+    //         SqlSupportsConvert::SqlConvertReal as i32,
+    //         SqlSupportsConvert::SqlConvertTinyint as i32,
+    //     ],
+    // );
+    // convert
+});
+
 #[allow(non_snake_case)]
 static INSTANCE: Lazy<SqlInfoData> = Lazy::new(|| {
     // The following are not defined in the [`SqlInfo`], but are
@@ -97,30 +153,61 @@ static INSTANCE: Lazy<SqlInfoData> = Lazy::new(|| {
     builder.append(SqlInfo::SqlSupportsColumnAliasing, true);
     builder.append(SqlInfo::SqlNullPlusNullIsNull, true);
     print!("chunchun SqlSupportsConvert\n\n");
-    let mut convert: HashMap<i32, Vec<i32>> = HashMap::new();
-    convert.insert(
-        SqlSupportsConvert::SqlConvertTinyint as i32,
-        vec![
-            SqlSupportsConvert::SqlConvertBigint as i32,
-            SqlSupportsConvert::SqlConvertChar as i32,
-            SqlSupportsConvert::SqlConvertFloat as i32,
-            SqlSupportsConvert::SqlConvertInteger as i32,
-            SqlSupportsConvert::SqlConvertReal as i32,
-            SqlSupportsConvert::SqlConvertSmallint as i32,
-        ],
+    // let map: HashMap<i32, Vec<i32>> = [
+    //     (
+    //         SqlSupportsConvert::SqlConvertTinyint as i32,
+    //         vec![
+    //             SqlSupportsConvert::SqlConvertBigint as i32,
+    //             SqlSupportsConvert::SqlConvertChar as i32,
+    //             SqlSupportsConvert::SqlConvertFloat as i32,
+    //             SqlSupportsConvert::SqlConvertInteger as i32,
+    //             SqlSupportsConvert::SqlConvertReal as i32,
+    //             SqlSupportsConvert::SqlConvertSmallint as i32,
+    //         ],
+    //     ),
+    //     (
+    //         SqlSupportsConvert::SqlConvertSmallint as i32,
+    //         vec![
+    //             SqlSupportsConvert::SqlConvertBigint as i32,
+    //             SqlSupportsConvert::SqlConvertChar as i32,
+    //             SqlSupportsConvert::SqlConvertFloat as i32,
+    //             SqlSupportsConvert::SqlConvertInteger as i32,
+    //             SqlSupportsConvert::SqlConvertReal as i32,
+    //             SqlSupportsConvert::SqlConvertTinyint as i32,
+    //         ],
+    //     ),
+    // ]
+    // .iter()
+    // .cloned()
+    // .collect();
+    builder.append(
+        SqlInfo::SqlSupportsConvert,
+        &SQL_SUPPORTS_CONVERT_MAP.clone(),
     );
-    convert.insert(
-        SqlSupportsConvert::SqlConvertSmallint as i32,
-        vec![
-            SqlSupportsConvert::SqlConvertBigint as i32,
-            SqlSupportsConvert::SqlConvertChar as i32,
-            SqlSupportsConvert::SqlConvertFloat as i32,
-            SqlSupportsConvert::SqlConvertInteger as i32,
-            SqlSupportsConvert::SqlConvertReal as i32,
-            SqlSupportsConvert::SqlConvertTinyint as i32,
-        ],
-    );
-    builder.append(SqlInfo::SqlSupportsConvert, &convert);
+    // let mut convert: HashMap<i32, Vec<i32>> = HashMap::new();
+    // convert.insert(
+    //     SqlSupportsConvert::SqlConvertTinyint as i32,
+    //     vec![
+    //         SqlSupportsConvert::SqlConvertBigint as i32,
+    //         SqlSupportsConvert::SqlConvertChar as i32,
+    //         SqlSupportsConvert::SqlConvertFloat as i32,
+    //         SqlSupportsConvert::SqlConvertInteger as i32,
+    //         SqlSupportsConvert::SqlConvertReal as i32,
+    //         SqlSupportsConvert::SqlConvertSmallint as i32,
+    //     ],
+    // );
+    // convert.insert(
+    //     SqlSupportsConvert::SqlConvertSmallint as i32,
+    //     vec![
+    //         SqlSupportsConvert::SqlConvertBigint as i32,
+    //         SqlSupportsConvert::SqlConvertChar as i32,
+    //         SqlSupportsConvert::SqlConvertFloat as i32,
+    //         SqlSupportsConvert::SqlConvertInteger as i32,
+    //         SqlSupportsConvert::SqlConvertReal as i32,
+    //         SqlSupportsConvert::SqlConvertTinyint as i32,
+    //     ],
+    // );
+    // builder.append(SqlInfo::SqlSupportsConvert, &convert);
     builder.append(SqlInfo::SqlSupportsTableCorrelationNames, false);
     builder.append(SqlInfo::SqlSupportsDifferentTableCorrelationNames, false);
     builder.append(SqlInfo::SqlSupportsExpressionsInOrderBy, true);
@@ -198,6 +285,8 @@ static INSTANCE: Lazy<SqlInfoData> = Lazy::new(|| {
     builder.append(SqlInfo::SqlLocatorsUpdateCopy, false);
     builder.append(SqlInfo::SqlStoredFunctionsUsingCallSyntaxSupported, false);
 
+    let builders = builder.clone().build().unwrap().record_batch(None).unwrap();
+    print!("chunchun builer - SqlInfoData:\n{builders:?}\n\n");
     builder.build().expect("Successfully built metadata")
 });
 

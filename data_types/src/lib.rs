@@ -352,15 +352,23 @@ impl NamespaceSchema {
 
 impl From<&NamespaceSchema> for generated_types::influxdata::iox::schema::v1::NamespaceSchema {
     fn from(schema: &NamespaceSchema) -> Self {
-        use generated_types::influxdata::iox::schema::v1 as proto;
-        Self {
-            id: schema.id.get(),
-            tables: schema
-                .tables
-                .iter()
-                .map(|(name, t)| (name.clone(), proto::TableSchema::from(t)))
-                .collect(),
-        }
+        namespace_schema_proto(schema.id, schema.tables.iter())
+    }
+}
+
+/// Generate [`NamespaceSchema`] protobuf from a `NamespaceId` and a list of tables. Useful to
+/// filter the tables returned from an API request to a particular table without needing to clone
+/// the whole `NamespaceSchema` to use the `From` impl.
+pub fn namespace_schema_proto<'a>(
+    id: NamespaceId,
+    tables: impl Iterator<Item = (&'a String, &'a TableSchema)>,
+) -> generated_types::influxdata::iox::schema::v1::NamespaceSchema {
+    use generated_types::influxdata::iox::schema::v1 as proto;
+    proto::NamespaceSchema {
+        id: id.get(),
+        tables: tables
+            .map(|(name, t)| (name.clone(), proto::TableSchema::from(t)))
+            .collect(),
     }
 }
 

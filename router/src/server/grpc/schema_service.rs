@@ -85,7 +85,7 @@ where
         let namespace_name = NamespaceName::try_from(namespace.clone())
             .map_err(|e| Status::invalid_argument(e.to_string()))?;
 
-        let namespace_schema = self
+        let mut namespace_schema = self
             .namespace_cache
             .get_schema(&namespace_name)
             .await
@@ -149,17 +149,12 @@ where
         // If the table schema has been updated, immediately add it to the cache.
         let latest_schema = match maybe_new_table_schema {
             Some(modified_table) => {
-                let modified_schema = data_types::NamespaceSchema {
-                    tables: [(table.to_string(), modified_table)].into(),
-                    id: namespace_schema.id,
-                    max_tables: namespace_schema.max_tables,
-                    max_columns_per_table: namespace_schema.max_columns_per_table,
-                    retention_period_ns: namespace_schema.retention_period_ns,
-                    partition_template: namespace_schema.partition_template.clone(),
-                };
+                let modified_schema = Arc::make_mut(&mut namespace_schema);
+                modified_schema.tables = [(table.to_string(), modified_table)].into();
+
                 let (new_schema, _) = self
                     .namespace_cache
-                    .put_schema(namespace_name.clone(), modified_schema);
+                    .put_schema(namespace_name.clone(), modified_schema.clone());
                 trace!(%namespace, %table, "schema cache updated with table upsert");
                 new_schema
             }

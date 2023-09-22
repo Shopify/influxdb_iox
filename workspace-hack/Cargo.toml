@@ -42,8 +42,7 @@ futures-util = { version = "0.3", features = ["channel", "io", "sink"] }
 getrandom = { version = "0.2", default-features = false, features = ["std"] }
 hashbrown = { version = "0.14", features = ["raw"] }
 indexmap = { version = "2" }
-itertools-93f6ce9d446188ac = { package = "itertools", version = "0.10" }
-itertools-a6292c17cd707f01 = { package = "itertools", version = "0.11" }
+itertools = { version = "0.11" }
 libc = { version = "0.2", features = ["extra_traits"] }
 lock_api = { version = "0.4", features = ["arc_lock"] }
 log = { version = "0.4", default-features = false, features = ["std"] }
@@ -59,9 +58,8 @@ petgraph = { version = "0.6" }
 phf_shared = { version = "0.11" }
 predicates = { version = "3" }
 proptest = { version = "1", default-features = false, features = ["std"] }
-prost-5ef9efb8ec2df382 = { package = "prost", version = "0.12" }
-prost-a6292c17cd707f01 = { package = "prost", version = "0.11" }
-prost-types = { workspace = true }
+prost = { version = "0.12" }
+prost-types = { version = "0.12" }
 rand = { version = "0.8", features = ["small_rng"] }
 rand_core = { version = "0.6", default-features = false, features = ["std"] }
 regex = { version = "1" }
@@ -69,7 +67,7 @@ regex-automata = { version = "0.3", default-features = false, features = ["dfa-o
 regex-syntax = { version = "0.7" }
 reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls", "stream"] }
 ring = { version = "0.16", features = ["std"] }
-rustls = { version = "0.21", default-features = false, features = ["dangerous_configuration", "logging", "tls12"] }
+rustls = { version = "0.21", features = ["dangerous_configuration"] }
 serde = { version = "1", features = ["derive", "rc"] }
 serde_json = { version = "1", features = ["raw_value"] }
 sha2 = { version = "0.10" }
@@ -82,6 +80,7 @@ thrift = { version = "0.17" }
 tokio = { version = "1", features = ["full", "test-util", "tracing"] }
 tokio-stream = { version = "0.1", features = ["fs", "net"] }
 tokio-util = { version = "0.7", features = ["codec", "compat", "io"] }
+tonic = { version = "0.10", features = ["tls-webpki-roots"] }
 tower = { version = "0.4", features = ["balance", "buffer", "limit", "timeout", "util"] }
 tracing = { version = "0.1", features = ["log", "max_level_trace", "release_max_level_trace"] }
 tracing-core = { version = "0.1" }
@@ -113,8 +112,7 @@ getrandom = { version = "0.2", default-features = false, features = ["std"] }
 hashbrown = { version = "0.14", features = ["raw"] }
 heck = { version = "0.4", features = ["unicode"] }
 indexmap = { version = "2" }
-itertools-93f6ce9d446188ac = { package = "itertools", version = "0.10" }
-itertools-a6292c17cd707f01 = { package = "itertools", version = "0.11" }
+itertools = { version = "0.11" }
 libc = { version = "0.2", features = ["extra_traits"] }
 lock_api = { version = "0.4", features = ["arc_lock"] }
 log = { version = "0.4", default-features = false, features = ["std"] }
@@ -126,15 +124,15 @@ once_cell = { version = "1", features = ["parking_lot"] }
 parking_lot = { version = "0.12", features = ["arc_lock"] }
 petgraph = { version = "0.6" }
 phf_shared = { version = "0.11" }
-prost-a6292c17cd707f01 = { package = "prost", version = "0.11" }
-prost-types = { workspace = true }
+prost = { version = "0.12" }
+prost-types = { version = "0.12" }
 rand = { version = "0.8", features = ["small_rng"] }
 rand_core = { version = "0.6", default-features = false, features = ["std"] }
 regex = { version = "1" }
 regex-automata = { version = "0.3", default-features = false, features = ["dfa-onepass", "dfa-search", "hybrid", "meta", "nfa-backtrack", "perf-inline", "perf-literal", "unicode"] }
 regex-syntax = { version = "0.7" }
 ring = { version = "0.16", features = ["std"] }
-rustls = { version = "0.21", default-features = false, features = ["dangerous_configuration", "logging", "tls12"] }
+rustls = { version = "0.21", features = ["dangerous_configuration"] }
 serde = { version = "1", features = ["derive", "rc"] }
 serde_json = { version = "1", features = ["raw_value"] }
 sha2 = { version = "0.10" }
@@ -157,43 +155,35 @@ uuid = { version = "1", features = ["v4"] }
 [target.x86_64-unknown-linux-gnu.dependencies]
 bitflags = { version = "2", default-features = false, features = ["std"] }
 once_cell = { version = "1", default-features = false, features = ["unstable"] }
-rustls = { version = "0.21" }
 
 [target.x86_64-unknown-linux-gnu.build-dependencies]
 bitflags = { version = "2", default-features = false, features = ["std"] }
 once_cell = { version = "1", default-features = false, features = ["unstable"] }
-rustls = { version = "0.21" }
 
 [target.x86_64-apple-darwin.dependencies]
 bitflags = { version = "2", default-features = false, features = ["std"] }
 once_cell = { version = "1", default-features = false, features = ["unstable"] }
-rustls = { version = "0.21" }
 
 [target.x86_64-apple-darwin.build-dependencies]
 bitflags = { version = "2", default-features = false, features = ["std"] }
 once_cell = { version = "1", default-features = false, features = ["unstable"] }
-rustls = { version = "0.21" }
 
 [target.aarch64-apple-darwin.dependencies]
 bitflags = { version = "2", default-features = false, features = ["std"] }
 once_cell = { version = "1", default-features = false, features = ["unstable"] }
-rustls = { version = "0.21" }
 
 [target.aarch64-apple-darwin.build-dependencies]
 bitflags = { version = "2", default-features = false, features = ["std"] }
 once_cell = { version = "1", default-features = false, features = ["unstable"] }
-rustls = { version = "0.21" }
 
 [target.x86_64-pc-windows-msvc.dependencies]
 once_cell = { version = "1", default-features = false, features = ["unstable"] }
-rustls = { version = "0.21" }
 scopeguard = { version = "1" }
 winapi = { version = "0.3", default-features = false, features = ["basetsd", "cfg", "combaseapi", "consoleapi", "errhandlingapi", "evntrace", "fileapi", "handleapi", "heapapi", "ifdef", "in6addr", "inaddr", "ioapiset", "iphlpapi", "lmaccess", "lmapibuf", "lmcons", "memoryapi", "minwinbase", "minwindef", "netioapi", "ntlsa", "ntsecapi", "objidl", "oleauto", "pdh", "powerbase", "processenv", "psapi", "rpcdce", "sddl", "securitybaseapi", "shellapi", "std", "stringapiset", "synchapi", "sysinfoapi", "wbemcli", "winbase", "wincon", "windef", "winerror", "winioctl", "winnt", "winsock2", "winuser", "ws2ipdef", "ws2tcpip", "wtypesbase"] }
 windows-sys = { version = "0.48", features = ["Win32_Foundation", "Win32_Networking_WinSock", "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_Console", "Win32_System_Diagnostics_Debug", "Win32_System_IO", "Win32_System_Pipes", "Win32_System_Registry", "Win32_System_SystemServices", "Win32_System_Threading", "Win32_System_Time", "Win32_System_WindowsProgramming", "Win32_UI_Shell"] }
 
 [target.x86_64-pc-windows-msvc.build-dependencies]
 once_cell = { version = "1", default-features = false, features = ["unstable"] }
-rustls = { version = "0.21" }
 scopeguard = { version = "1" }
 winapi = { version = "0.3", default-features = false, features = ["basetsd", "cfg", "combaseapi", "consoleapi", "errhandlingapi", "evntrace", "fileapi", "handleapi", "heapapi", "ifdef", "in6addr", "inaddr", "ioapiset", "iphlpapi", "lmaccess", "lmapibuf", "lmcons", "memoryapi", "minwinbase", "minwindef", "netioapi", "ntlsa", "ntsecapi", "objidl", "oleauto", "pdh", "powerbase", "processenv", "psapi", "rpcdce", "sddl", "securitybaseapi", "shellapi", "std", "stringapiset", "synchapi", "sysinfoapi", "wbemcli", "winbase", "wincon", "windef", "winerror", "winioctl", "winnt", "winsock2", "winuser", "ws2ipdef", "ws2tcpip", "wtypesbase"] }
 windows-sys = { version = "0.48", features = ["Win32_Foundation", "Win32_Networking_WinSock", "Win32_Security", "Win32_Storage_FileSystem", "Win32_System_Console", "Win32_System_Diagnostics_Debug", "Win32_System_IO", "Win32_System_Pipes", "Win32_System_Registry", "Win32_System_SystemServices", "Win32_System_Threading", "Win32_System_Time", "Win32_System_WindowsProgramming", "Win32_UI_Shell"] }

@@ -2,7 +2,7 @@ use crate::{
     namespace_cache::NamespaceCache,
     schema_validator::{SchemaError, SchemaValidator},
 };
-use data_types::{ColumnType, NamespaceName};
+use data_types::{namespace_schema_proto, ColumnType, NamespaceName};
 use generated_types::influxdata::iox::schema::v1::*;
 use observability_deps::tracing::*;
 use std::{collections::BTreeMap, sync::Arc};
@@ -54,26 +54,19 @@ where
                 Status::not_found(e.to_string())
             })?;
 
-        let schema = if let Some(table_name) = req.table {
+        let serialized_schema = if let Some(table_name) = req.table {
             let table = schema.tables.get(&table_name).ok_or_else(|| {
                 warn!(%namespace_name, %table_name, "failed to retrieve table schema");
                 Status::not_found(format!("table {table_name} not found"))
             })?;
 
-            Arc::new(data_types::NamespaceSchema {
-                tables: [(table_name.to_string(), table.clone())].into(),
-                id: schema.id,
-                max_tables: schema.max_tables,
-                max_columns_per_table: schema.max_columns_per_table,
-                retention_period_ns: schema.retention_period_ns,
-                partition_template: schema.partition_template.clone(),
-            })
+            namespace_schema_proto(schema.id, [(&table_name, table)].into_iter())
         } else {
-            schema
+            NamespaceSchema::from(&*schema)
         };
 
         Ok(Response::new(GetSchemaResponse {
-            schema: Some((&*schema).into()),
+            schema: Some(serialized_schema),
         }))
     }
 
@@ -181,17 +174,13 @@ where
             Status::not_found(format!("table {table} not found"))
         })?;
 
-        let namespace_schema_with_only_upserted_table = Arc::new(data_types::NamespaceSchema {
-            tables: [(table.to_string(), only_upserted_table.clone())].into(),
-            id: latest_schema.id,
-            max_tables: latest_schema.max_tables,
-            max_columns_per_table: latest_schema.max_columns_per_table,
-            retention_period_ns: latest_schema.retention_period_ns,
-            partition_template: latest_schema.partition_template.clone(),
-        });
+        let serialized_schema = namespace_schema_proto(
+            latest_schema.id,
+            [(&table, only_upserted_table)].into_iter(),
+        );
 
         Ok(Response::new(UpsertSchemaResponse {
-            schema: Some((&*namespace_schema_with_only_upserted_table).into()),
+            schema: Some(serialized_schema),
         }))
     }
 }

@@ -4,6 +4,11 @@
 //!
 //! [queryrouterd]: https://github.com/influxdata/idpe/blob/85aa7a52b40f173cc4d79ac02b3a4a13e82333c4/queryrouter/internal/server/flightsql_info.go#L4
 
+use std::collections::HashMap;
+
+use arrow_flight::sql::SqlSupportsConvert;
+use once_cell::sync::Lazy;
+
 pub(crate) const SQL_INFO_SQL_KEYWORDS: &[&str] = &[
     // SQL-92 Reserved Words
     "absolute",
@@ -301,3 +306,59 @@ pub(crate) const SQL_INFO_DATE_TIME_FUNCTIONS: &[&str] = &[
 ];
 
 pub(crate) const SQL_INFO_SYSTEM_FUNCTIONS: &[&str] = &["array", "arrow_typeof", "struct"];
+
+pub(crate) static SQL_SUPPORTS_CONVERT_MAP: Lazy<HashMap<i32, Vec<i32>>> = Lazy::new(|| {
+    [
+        (
+            SqlSupportsConvert::SqlConvertTinyint as i32,
+            vec![
+                SqlSupportsConvert::SqlConvertBigint as i32,
+                SqlSupportsConvert::SqlConvertChar as i32,
+                SqlSupportsConvert::SqlConvertFloat as i32,
+                SqlSupportsConvert::SqlConvertInteger as i32,
+                SqlSupportsConvert::SqlConvertReal as i32,
+                SqlSupportsConvert::SqlConvertSmallint as i32,
+            ],
+        ),
+        (
+            SqlSupportsConvert::SqlConvertBit as i32,
+            vec![
+                SqlSupportsConvert::SqlConvertBigint as i32,
+                SqlSupportsConvert::SqlConvertChar as i32,
+                SqlSupportsConvert::SqlConvertFloat as i32,
+                SqlSupportsConvert::SqlConvertInteger as i32,
+                SqlSupportsConvert::SqlConvertReal as i32,
+                SqlSupportsConvert::SqlConvertSmallint as i32,
+                SqlSupportsConvert::SqlConvertVarchar as i32,
+            ],
+        ),
+    ]
+    .iter()
+    .cloned()
+    .collect()
+
+    // let mut convert: HashMap<i32, Vec<i32>> = HashMap::new();
+    // convert.insert(
+    //     SqlSupportsConvert::SqlConvertTinyint as i32,
+    //     vec![
+    //         SqlSupportsConvert::SqlConvertBigint as i32,
+    //         SqlSupportsConvert::SqlConvertChar as i32,
+    //         SqlSupportsConvert::SqlConvertFloat as i32,
+    //         SqlSupportsConvert::SqlConvertInteger as i32,
+    //         SqlSupportsConvert::SqlConvertReal as i32,
+    //         SqlSupportsConvert::SqlConvertSmallint as i32,
+    //     ],
+    // );
+    // convert.insert(
+    //     SqlSupportsConvert::SqlConvertSmallint as i32,
+    //     vec![
+    //         SqlSupportsConvert::SqlConvertBigint as i32,
+    //         SqlSupportsConvert::SqlConvertChar as i32,
+    //         SqlSupportsConvert::SqlConvertFloat as i32,
+    //         SqlSupportsConvert::SqlConvertInteger as i32,
+    //         SqlSupportsConvert::SqlConvertReal as i32,
+    //         SqlSupportsConvert::SqlConvertTinyint as i32,
+    //     ],
+    // );
+    // convert
+});

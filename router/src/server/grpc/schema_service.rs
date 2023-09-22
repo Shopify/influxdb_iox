@@ -23,6 +23,8 @@ impl<C> schema_service_server::SchemaService for SchemaService<C>
 where
     C: NamespaceCache<ReadError = iox_catalog::interface::Error> + 'static,
 {
+    /// Getting a namespace and/or table schema from the cache is eventually consistent because the
+    /// underlying `NamespaceCache` itself is also eventually consistent via the gossip protocol.
     async fn get_schema(
         &self,
         request: Request<GetSchemaRequest>,
@@ -40,6 +42,24 @@ where
                 warn!(error=%e, %namespace_name, "failed to retrieve namespace schema");
                 Status::not_found(e.to_string())
             })?;
+
+        let schema = if let Some(table_name) = req.table {
+            let table = schema.tables.get(&table_name).ok_or_else(|| {
+                warn!(%namespace_name, %table_name, "failed to retrieve table schema");
+                Status::not_found(format!("table {table_name} not found"))
+            })?;
+
+            Arc::new(data_types::NamespaceSchema {
+                tables: [(table_name.to_string(), table.clone())].into(),
+                id: schema.id,
+                max_tables: schema.max_tables,
+                max_columns_per_table: schema.max_columns_per_table,
+                retention_period_ns: schema.retention_period_ns,
+                partition_template: schema.partition_template.clone(),
+            })
+        } else {
+            schema
+        };
 
         Ok(Response::new(GetSchemaResponse {
             schema: Some((&*schema).into()),

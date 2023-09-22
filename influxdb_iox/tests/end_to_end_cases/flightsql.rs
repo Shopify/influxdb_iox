@@ -1957,6 +1957,7 @@ supportsCatalogsInPrivilegeDefinitions: false
 supportsCatalogsInProcedureCalls: true
 supportsCatalogsInTableDefinitions: true
 supportsColumnAliasing: true
+supportsConvert: true
 supportsCoreSQLGrammar: false
 supportsCorrelatedSubqueries: true
 supportsDataDefinitionAndDataManipulationTransactions: false

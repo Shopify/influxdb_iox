@@ -264,9 +264,20 @@ public class Main {
         System.out.println("supportsCatalogsInProcedureCalls: " + md.supportsCatalogsInProcedureCalls());
         System.out.println("supportsCatalogsInTableDefinitions: " + md.supportsCatalogsInTableDefinitions());
         System.out.println("supportsColumnAliasing: " + md.supportsColumnAliasing());
-        // Convert not yet supported
-        // https://github.com/influxdata/influxdb_iox/issues/7253
-        //System.out.println("supportsConvert: " + md.supportsConvert());
+        System.out.println("supportsConvert: " + md.supportsConvert());
+        System.out.println("supportsConvert - TINYINT to BIGINT: " + md.supportsConvert(java.sql.Types.TINYINT, java.sql.Types.BIGINT));
+        System.out.println("supportsConvert - TINYINT to CHAR: " + md.supportsConvert(java.sql.Types.TINYINT, java.sql.Types.CHAR));
+        System.out.println("supportsConvert - TINYINT to FLOAT: " + md.supportsConvert(java.sql.Types.TINYINT, java.sql.Types.FLOAT));
+        System.out.println("supportsConvert - TINYINT to INTEGER: " + md.supportsConvert(java.sql.Types.TINYINT, java.sql.Types.INTEGER));
+        System.out.println("supportsConvert - TINYINT to REAL: " + md.supportsConvert(java.sql.Types.TINYINT, java.sql.Types.REAL));
+        System.out.println("supportsConvert - TINYINT to SMALLINT: " + md.supportsConvert(java.sql.Types.TINYINT, java.sql.Types.SMALLINT));
+        System.out.println("supportsConvert - SMALLINT to BIGINT: " + md.supportsConvert(java.sql.Types.SMALLINT, java.sql.Types.BIGINT));
+        System.out.println("supportsConvert - SMALLINT to CHAR: " + md.supportsConvert(java.sql.Types.SMALLINT, java.sql.Types.CHAR));
+        System.out.println("supportsConvert - SMALLINT to FLOAT: " + md.supportsConvert(java.sql.Types.SMALLINT, java.sql.Types.FLOAT));
+        System.out.println("supportsConvert - SMALLINT to INTEGER: " + md.supportsConvert(java.sql.Types.SMALLINT, java.sql.Types.INTEGER));
+        System.out.println("supportsConvert - SMALLINT to REAL: " + md.supportsConvert(java.sql.Types.SMALLINT, java.sql.Types.REAL));
+        System.out.println("supportsConvert - SMALLINT to TINYINT: " + md.supportsConvert(java.sql.Types.SMALLINT, java.sql.Types.TINYINT));
+        System.out.println("supportsConvert - BIT to CHAR: " + md.supportsConvert(java.sql.Types.BIT, java.sql.Types.CHAR));
         System.out.println("supportsCoreSQLGrammar: " + md.supportsCoreSQLGrammar());
         System.out.println("supportsCorrelatedSubqueries: " + md.supportsCorrelatedSubqueries());
         System.out.println("supportsDataDefinitionAndDataManipulationTransactions: " + md.supportsDataDefinitionAndDataManipulationTransactions());

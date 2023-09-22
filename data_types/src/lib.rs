@@ -358,27 +358,7 @@ impl From<&NamespaceSchema> for generated_types::influxdata::iox::schema::v1::Na
             tables: schema
                 .tables
                 .iter()
-                .map(|(name, t)| {
-                    (
-                        name.clone(),
-                        proto::TableSchema {
-                            id: t.id.get(),
-                            columns: t
-                                .columns
-                                .iter()
-                                .map(|(name, c)| {
-                                    (
-                                        name.clone(),
-                                        proto::ColumnSchema {
-                                            id: c.id.get(),
-                                            column_type: c.column_type as i32,
-                                        },
-                                    )
-                                })
-                                .collect(),
-                        },
-                    )
-                })
+                .map(|(name, t)| (name.clone(), proto::TableSchema::from(t)))
                 .collect(),
         }
     }
@@ -491,6 +471,29 @@ impl TableSchema {
     /// Return number of columns of the table
     pub fn column_count(&self) -> usize {
         self.columns.column_count()
+    }
+}
+
+impl From<&TableSchema> for generated_types::influxdata::iox::schema::v1::TableSchema {
+    fn from(table_schema: &TableSchema) -> Self {
+        use generated_types::influxdata::iox::schema::v1 as proto;
+
+        Self {
+            id: table_schema.id.get(),
+            columns: table_schema
+                .columns
+                .iter()
+                .map(|(name, c)| {
+                    (
+                        name.clone(),
+                        proto::ColumnSchema {
+                            id: c.id.get(),
+                            column_type: c.column_type as i32,
+                        },
+                    )
+                })
+                .collect(),
+        }
     }
 }
 

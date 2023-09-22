@@ -61,7 +61,7 @@ predicates = { version = "3" }
 proptest = { version = "1", default-features = false, features = ["std"] }
 prost-5ef9efb8ec2df382 = { package = "prost", version = "0.12" }
 prost-a6292c17cd707f01 = { package = "prost", version = "0.11" }
-prost-types = { version = "0.11" }
+prost-types = { workspace = true }
 rand = { version = "0.8", features = ["small_rng"] }
 rand_core = { version = "0.6", default-features = false, features = ["std"] }
 regex = { version = "1" }
@@ -127,7 +127,7 @@ parking_lot = { version = "0.12", features = ["arc_lock"] }
 petgraph = { version = "0.6" }
 phf_shared = { version = "0.11" }
 prost-a6292c17cd707f01 = { package = "prost", version = "0.11" }
-prost-types = { version = "0.11" }
+prost-types = { workspace = true }
 rand = { version = "0.8", features = ["small_rng"] }
 rand_core = { version = "0.6", default-features = false, features = ["std"] }
 regex = { version = "1" }

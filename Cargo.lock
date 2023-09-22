@@ -2190,7 +2190,7 @@ version = "0.1.0"
 dependencies = [
  "prost 0.12.1",
  "prost-build 0.12.1",
- "prost-types 0.11.9",
+ "prost-types 0.12.1",
  "tonic 0.10.1",
  "tonic-build",
  "workspace-hack",
@@ -7206,7 +7206,7 @@ dependencies = [
  "proptest",
  "prost 0.11.9",
  "prost 0.12.1",
- "prost-types 0.11.9",
+ "prost-types 0.12.1",
  "rand",
  "rand_core",
  "regex",

@@ -123,10 +123,12 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
-arrow = { version = "46.0.0" }
-arrow-flight = { version = "46.0.0" }
-datafusion = { git = "https://github.com/apache/arrow-datafusion.git", rev = "81f33b0e27f5694348cd953a937203d835b57178", default-features = false }
-datafusion-proto = { git = "https://github.com/apache/arrow-datafusion.git", rev = "81f33b0e27f5694348cd953a937203d835b57178" }
+arrow = { version = "47.0.0" }
+arrow-flight = { version = "47.0.0" }
+#datafusion = { git = "https://github.com/apache/arrow-datafusion.git", rev = "81f33b0e27f5694348cd953a937203d835b57178", default-features = false }
+#datafusion-proto = { git = "https://github.com/apache/arrow-datafusion.git", rev = "81f33b0e27f5694348cd953a937203d835b57178" }
+datafusion = { git = "https://github.com/tustvold/arrow-datafusion.git", rev = "3f308d03e7d70353a028ca7297a6acec1ea4462f", default-features = false }
+datafusion-proto = { git = "https://github.com/tustvold/arrow-datafusion.git", rev = "3f308d03e7d70353a028ca7297a6acec1ea4462f" }
 
 hashbrown = { version = "0.14.0" }
 object_store = { version = "0.7.0" }
@@ -160,19 +162,3 @@ opt-level = 3
 
 [profile.dev.package.similar]
 opt-level = 3
-
-[patch.crates-io]
-# Can remove after arrow 47 is released
-# Pin to https://github.com/apache/arrow-rs/pull/4790
-# To get fixes for
-# - https://github.com/apache/arrow-rs/issues/4788,
-# - https://github.com/apache/arrow-rs/pull/4799
-arrow = { git = "https://github.com/alamb/arrow-rs.git", rev = "7c236c06bfb78c0c877055c1617d9373971511a5" }
-arrow-array = { git = "https://github.com/alamb/arrow-rs.git", rev = "7c236c06bfb78c0c877055c1617d9373971511a5" }
-arrow-buffer = { git = "https://github.com/alamb/arrow-rs.git", rev = "7c236c06bfb78c0c877055c1617d9373971511a5" }
-arrow-schema = { git = "https://github.com/alamb/arrow-rs.git", rev = "7c236c06bfb78c0c877055c1617d9373971511a5" }
-arrow-select = { git = "https://github.com/alamb/arrow-rs.git", rev = "7c236c06bfb78c0c877055c1617d9373971511a5" }
-arrow-string = { git = "https://github.com/alamb/arrow-rs.git", rev = "7c236c06bfb78c0c877055c1617d9373971511a5" }
-arrow-ord = { git = "https://github.com/alamb/arrow-rs.git", rev = "7c236c06bfb78c0c877055c1617d9373971511a5" }
-arrow-flight = { git = "https://github.com/alamb/arrow-rs.git", rev = "7c236c06bfb78c0c877055c1617d9373971511a5" }
-parquet = { git = "https://github.com/alamb/arrow-rs.git", rev = "7c236c06bfb78c0c877055c1617d9373971511a5" }

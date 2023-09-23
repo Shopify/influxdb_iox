@@ -57,6 +57,17 @@ pub struct RouterConfig {
     )]
     pub http_request_limit: usize,
 
+    /// When writing line protocol data, does an error on a single line
+    /// reject the write? Or will all individual valid lines be written?
+    /// Set to true to enable all valid lines to write.
+    #[clap(
+        long = "partial-writes-enabled",
+        env = "INFLUXDB_IOX_PARTIAL_WRITES_ENABLED",
+        default_value = "false",
+        action
+    )]
+    pub permit_partial_writes: bool,
+
     /// gRPC address for the router to talk with the ingesters. For
     /// example:
     ///

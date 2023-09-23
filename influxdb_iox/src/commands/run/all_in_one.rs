@@ -185,6 +185,14 @@ pub struct Config {
     )]
     pub(crate) single_tenant_deployment: bool,
 
+    #[clap(
+        long = "partial-writes-enabled",
+        env = "INFLUXDB_IOX_PARTIAL_WRITES_ENABLED",
+        default_value = "false",
+        action
+    )]
+    pub permit_partial_writes: bool,
+
     /// logging options
     #[clap(flatten)]
     pub(crate) logging_config: LoggingConfig,
@@ -390,6 +398,7 @@ impl Config {
             querier_max_concurrent_queries,
             exec_mem_pool_bytes,
             single_tenant_deployment,
+            permit_partial_writes,
         } = self;
 
         // Determine where to store files (wal and possibly catalog
@@ -492,6 +501,7 @@ impl Config {
             authz_address: authz_address.clone(),
             single_tenant_deployment,
             http_request_limit: 1_000,
+            permit_partial_writes,
             ingester_addresses: ingester_addresses.clone(),
             new_namespace_retention_hours: None, // infinite retention
             namespace_autocreation_enabled: true,

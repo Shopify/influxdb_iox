@@ -224,6 +224,11 @@ impl TestConfig {
             .with_env("INFLUXDB_IOX_SINGLE_TENANCY", "true")
     }
 
+    /// Enable partial writes.
+    pub fn with_partial_writes(self) -> Self {
+        self.with_env("INFLUXDB_IOX_PARTIAL_WRITES_ENABLED", "true")
+    }
+
     // Get the catalog DSN URL if set.
     pub fn dsn(&self) -> &Option<String> {
         &self.dsn

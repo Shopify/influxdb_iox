@@ -369,14 +369,16 @@ where
 
         let mut converter = LinesConverter::new(default_time);
         converter.set_timestamp_base(write_info.precision.timestamp_base());
-        let (batches, stats) = match converter.write_lp(body).and_then(|_| converter.finish()) {
-            Ok(v) => v,
+        let errors = match converter.write_lp(body) {
+            Ok(_) => vec![],
             Err(mutable_batch_lp::Error::EmptyPayload) => {
                 debug!("nothing to write");
                 return Ok(());
             }
+            Err(mutable_batch_lp::Error::PerLine { lines }) if self.permit_partial_writes => lines,
             Err(line_errors) => return Err(Error::ParseLineProtocol(line_errors)),
         };
+        let (batches, stats) = converter.finish().map_err(Error::ParseLineProtocol)?;
 
         let num_tables = batches.len();
         let duration = start_instant.elapsed();
@@ -408,7 +410,13 @@ where
         self.write_metric_tables.inc(num_tables as _);
         self.write_metric_body_size.inc(body.len() as _);
 
-        Ok(())
+        if !errors.is_empty() {
+            Err(Error::ParseLineProtocol(mutable_batch_lp::Error::PerLine {
+                lines: errors,
+            }))
+        } else {
+            Ok(())
+        }
     }
 
     /// Parse the request's body into raw bytes, applying the configured size

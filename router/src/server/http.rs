@@ -206,6 +206,7 @@ impl From<&DmlError> for StatusCode {
 #[derive(Debug)]
 pub struct HttpDelegate<D, N, T = SystemProvider> {
     max_request_bytes: usize,
+    permit_partial_writes: bool,
     time_provider: T,
     namespace_resolver: N,
     dml_handler: D,
@@ -237,6 +238,7 @@ impl<D, N> HttpDelegate<D, N, SystemProvider> {
     pub fn new(
         max_request_bytes: usize,
         max_requests: usize,
+        permit_partial_writes: bool,
         namespace_resolver: N,
         dml_handler: D,
         metrics: &metric::Registry,
@@ -281,6 +283,7 @@ impl<D, N> HttpDelegate<D, N, SystemProvider> {
 
         Self {
             max_request_bytes,
+            permit_partial_writes,
             time_provider: SystemProvider::default(),
             namespace_resolver,
             write_request_mode_handler,
@@ -610,6 +613,7 @@ mod tests {
                     let delegate = HttpDelegate::new(
                         MAX_BYTES,
                         100,
+                        false,
                         mock_namespace_resolver,
                         Arc::clone(&dml_handler),
                         &metrics,
@@ -1097,6 +1101,7 @@ mod tests {
         let delegate = Arc::new(HttpDelegate::new(
             MAX_BYTES,
             1,
+            false,
             mock_namespace_resolver,
             Arc::clone(&dml_handler),
             &metrics,
@@ -1229,6 +1234,7 @@ mod tests {
         let delegate = HttpDelegate::new(
             MAX_BYTES,
             1,
+            false,
             mock_namespace_resolver,
             Arc::clone(&dml_handler),
             &metrics,
@@ -1271,6 +1277,7 @@ mod tests {
         let delegate = HttpDelegate::new(
             MAX_BYTES,
             1,
+            false,
             mock_namespace_resolver,
             Arc::clone(&dml_handler),
             &metrics,

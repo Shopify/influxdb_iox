@@ -473,6 +473,7 @@ pub async fn create_router_server_type(
     let http = HttpDelegate::new(
         common_state.run_config().max_http_request_size,
         router_config.http_request_limit,
+        router_config.permit_partial_writes,
         namespace_resolver,
         handler_stack,
         &metrics,

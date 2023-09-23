@@ -184,6 +184,7 @@ impl TestContext {
         let http_delegate = HttpDelegate::new(
             1024,
             100,
+            false,
             namespace_resolver,
             handler_stack,
             &metrics,

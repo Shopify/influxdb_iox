@@ -98,6 +98,7 @@ mod tests {
         let delegate = HttpDelegate::new(
             MAX_BYTES,
             1,
+            false,
             mock_namespace_resolver,
             Arc::clone(&dml_handler),
             &metrics,
@@ -187,6 +188,7 @@ mod tests {
         let delegate = HttpDelegate::new(
             MAX_BYTES,
             1,
+            false,
             mock_namespace_resolver,
             Arc::clone(&dml_handler),
             &metrics,

@@ -104,6 +104,65 @@ pub async fn test_writes_are_atomic() {
     .await;
 }
 
+#[tokio::test]
+pub async fn test_partial_writes() {
+    let database_url = maybe_skip_integration!();
+
+    let test_config = TestConfig::new_all_in_one(Some(database_url)).with_partial_writes();
+    let mut cluster = MiniCluster::create_all_in_one(test_config).await;
+
+    StepTest::new(
+        &mut cluster,
+        vec![
+            Step::WriteLineProtocol(
+                "table_atomic,tag1=A,tag2=good val=42i 123456\n\
+                table_atomic,tag1=A,tag2=good val=43i 123457"
+                    .into(),
+            ),
+            Step::Query {
+                sql: "select * from table_atomic".into(),
+                expected: vec![
+                    "+------+------+--------------------------------+-----+",
+                    "| tag1 | tag2 | time                           | val |",
+                    "+------+------+--------------------------------+-----+",
+                    "| A    | good | 1970-01-01T00:00:00.000123456Z | 42  |",
+                    "| A    | good | 1970-01-01T00:00:00.000123457Z | 43  |",
+                    "+------+------+--------------------------------+-----+",
+                ],
+            },
+            Step::WriteLineProtocolExpectingError {
+                line_protocol: "table_atomic,tag1=B,tag2=good val=44i 123458\n\
+                     ,tag1=B,tag2=bad val=45i 123459\n\
+                     table_atomic,tag1=B,tag2=good val=46i 123460\n\
+                     table_atomic,tag1=B,tag2=bad val=47i 123461000000000000000000000000"
+                    .into(),
+                expected_error_code: StatusCode::BAD_REQUEST,
+                expected_error_message: "failed to parse line protocol: \
+                    errors encountered on line(s):\
+                    \nerror parsing line 2 (1-based): Invalid measurement was provided\
+                    \nerror parsing line 4 (1-based): Unable to parse timestamp value '123461000000000000000000000000"
+                    .to_string(),
+                expected_line_number: Some(2),
+            },
+            Step::Query {
+                sql: "select * from table_atomic".into(),
+                expected: vec![
+                    "+------+------+--------------------------------+-----+",
+                    "| tag1 | tag2 | time                           | val |",
+                    "+------+------+--------------------------------+-----+",
+                    "| A    | good | 1970-01-01T00:00:00.000123456Z | 42  |",
+                    "| A    | good | 1970-01-01T00:00:00.000123457Z | 43  |",
+                    "| B    | good | 1970-01-01T00:00:00.000123458Z | 44  |",
+                    "| B    | good | 1970-01-01T00:00:00.000123460Z | 46  |",
+                    "+------+------+--------------------------------+-----+",
+                ],
+            },
+        ],
+    )
+    .run()
+    .await;
+}
+
 async fn read_body<T, E>(mut body: T) -> Vec<u8>
 where
     T: Body<Data = bytes::Bytes, Error = E> + Unpin,

@@ -182,9 +182,9 @@ async fn flightsql_get_sql_infos() {
                     // test with no filtering
                     let batches = collect_stream(client.get_sql_info(vec![]).await.unwrap()).await;
                     let total_rows: usize = batches.iter().map(|b| b.num_rows()).sum();
-                    // 85 `SqlInfo` entries are returned by IOx's GetSqlInfo implementation
+                    // 86 `SqlInfo` entries are returned by IOx's GetSqlInfo implementation
                     // if we change what is returned then this number should be updated too
-                    assert_eq!(total_rows, 85);
+                    assert_eq!(total_rows, 86);
 
                     // only retrieve requested metadata
                     let infos = vec![

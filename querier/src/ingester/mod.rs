@@ -3,7 +3,10 @@ use crate::cache::{namespace::CachedTable, CatalogCache};
 use arrow::record_batch::RecordBatch;
 use async_trait::async_trait;
 use data_types::{ChunkId, ChunkOrder, NamespaceId, TimestampMinMax, TransitionPartitionId};
-use datafusion::{physical_plan::Statistics, prelude::Expr};
+use datafusion::{
+    physical_plan::{SendableRecordBatchStream, Statistics},
+    prelude::Expr,
+};
 use iox_query::{
     chunk_statistics::{create_chunk_statistics, ColumnRanges},
     QueryChunk, QueryChunkData,
@@ -27,7 +30,13 @@ pub fn create_ingester_connections(
     use_v2: bool,
 ) -> Arc<dyn IngesterConnection> {
     if use_v2 {
-        unimplemented!("v2 ingester API")
+        v2::create_ingester_connections(
+            ingester_addresses,
+            catalog_cache.time_provider(),
+            &catalog_cache.metric_registry(),
+            open_circuit_after_n_errors,
+            trace_context_header_name,
+        )
     } else {
         v1::create_ingester_connections(
             ingester_addresses,
@@ -134,6 +143,7 @@ impl IngesterPartition {
                 IngesterChunkData::Eager(batches) => {
                     Some(batches.iter().map(|batch| batch.num_rows()).sum::<usize>())
                 }
+                IngesterChunkData::Stream(_) => None,
             };
 
             let stats = Arc::new(create_chunk_statistics(
@@ -167,10 +177,13 @@ impl IngesterPartition {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub enum IngesterChunkData {
     /// All batches are fetched already.
     Eager(Vec<RecordBatch>),
+
+    /// Batches are streamed.
+    Stream(Arc<dyn Fn() -> SendableRecordBatchStream + Send + Sync>),
 }
 
 impl IngesterChunkData {
@@ -178,6 +191,16 @@ impl IngesterChunkData {
     pub fn eager_ref(&self) -> &[RecordBatch] {
         match self {
             Self::Eager(batches) => batches,
+            Self::Stream(_) => panic!("data is backed by a stream"),
+        }
+    }
+}
+
+impl std::fmt::Debug for IngesterChunkData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Eager(arg0) => f.debug_tuple("Eager").field(arg0).finish(),
+            Self::Stream(_) => f.debug_tuple("Stream").field(&"<stream>").finish(),
         }
     }
 }
@@ -240,6 +263,7 @@ impl QueryChunk for IngesterChunk {
             IngesterChunkData::Eager(batches) => {
                 QueryChunkData::in_mem(batches.clone(), Arc::clone(self.schema.inner()))
             }
+            IngesterChunkData::Stream(f) => QueryChunkData::RecordBatches(f()),
         }
     }
 

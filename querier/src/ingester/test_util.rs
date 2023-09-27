@@ -75,6 +75,7 @@ impl IngesterConnection for MockIngesterConnection {
 
                                 IngesterChunkData::Eager(batches)
                             }
+                            IngesterChunkData::Stream(_) => unimplemented!(),
                         };
 
                         super::IngesterChunk { data, schema, ..ic }

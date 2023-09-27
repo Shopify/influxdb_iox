@@ -700,7 +700,9 @@ impl IngesterConnection for IngesterConnectionImpl {
                         for p in partitions {
                             status.n_partitions += 1;
                             for c in p.chunks() {
-                                let IngesterChunkData::Eager(batches) = &c.data;
+                                let IngesterChunkData::Eager(batches) = &c.data else {
+                                    unreachable!("V1 should always emit eager data")
+                                };
 
                                 status.n_chunks += 1;
                                 status.n_rows +=

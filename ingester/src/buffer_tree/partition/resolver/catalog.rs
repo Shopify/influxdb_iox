@@ -5,7 +5,10 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use backoff::{Backoff, BackoffConfig};
-use data_types::{Column, NamespaceId, Partition, PartitionKey, TableId};
+use data_types::{
+    build_sort_key_from_sort_key_ids_and_columns, Column, NamespaceId, Partition, PartitionKey,
+    TableId,
+};
 use iox_catalog::interface::Catalog;
 use observability_deps::tracing::debug;
 use parking_lot::Mutex;
@@ -14,10 +17,7 @@ use super::r#trait::PartitionProvider;
 use crate::{
     buffer_tree::{
         namespace::NamespaceName,
-        partition::{
-            counter::PartitionCounter, resolver::build_sort_key_from_sort_key_ids_and_columns,
-            PartitionData, SortKeyState,
-        },
+        partition::{counter::PartitionCounter, PartitionData, SortKeyState},
         table::metadata::TableMetadata,
     },
     deferred_load::DeferredLoad,

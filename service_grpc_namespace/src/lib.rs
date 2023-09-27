@@ -54,7 +54,7 @@ impl namespace_service_server::NamespaceService for NamespaceService {
             .await
             .map_err(|e| {
                 warn!(error=%e, "failed to retrieve namespaces from catalog");
-                Status::not_found(e.to_string())
+                status_from_catalog_namespace_error(e)
             })?;
         Ok(Response::new(GetNamespacesResponse {
             namespaces: namespaces.iter().map(namespace_to_proto).collect(),
@@ -138,7 +138,7 @@ impl namespace_service_server::NamespaceService for NamespaceService {
             .await
             .map_err(|e| {
                 warn!(error=%e, %namespace_name, "failed to soft-delete namespace");
-                Status::internal(e.to_string())
+                status_from_catalog_namespace_error(e)
             })?;
 
         info!(namespace_name, "soft-deleted namespace");
@@ -171,7 +171,7 @@ impl namespace_service_server::NamespaceService for NamespaceService {
             .await
             .map_err(|e| {
                 warn!(error=%e, %namespace_name, "failed to update namespace retention");
-                Status::not_found(e.to_string())
+                status_from_catalog_namespace_error(e)
             })?;
 
         info!(
@@ -573,6 +573,23 @@ mod tests {
         assert_matches!(listed_ns.as_slice(), [listed_ns] => {
             assert_eq!(listed_ns.partition_template, Some(PARTITION_BY_DAY_PROTO.as_ref().clone()));
         })
+    }
+
+    #[tokio::test]
+    async fn deleting_nonexistent_namespace_fails() {
+        let catalog: Arc<dyn Catalog> =
+            Arc::new(MemCatalog::new(Arc::new(metric::Registry::default())));
+
+        let handler = NamespaceService::new(catalog);
+
+        let error = handler
+            .delete_namespace(Request::new(DeleteNamespaceRequest {
+                name: NS_NAME.to_string(),
+            }))
+            .await
+            .unwrap_err();
+        assert_eq!(error.code(), Code::NotFound);
+        assert_eq!(error.message(), "namespace bananas not found");
     }
 
     #[tokio::test]

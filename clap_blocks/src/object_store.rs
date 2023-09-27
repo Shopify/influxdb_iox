@@ -481,7 +481,10 @@ mod tests {
         .unwrap();
 
         let object_store = make_object_store(&config).unwrap();
-        assert_eq!(&object_store.to_string(), "AmazonS3(mybucket)")
+        assert_eq!(
+            &object_store.to_string(),
+            "LimitStore(16, AmazonS3(mybucket))"
+        )
     }
 
     #[test]
@@ -497,13 +500,21 @@ mod tests {
 
         assert_eq!(
             err,
-            "Specified S3 for the object store, required configuration missing for bucket"
+            "Error configuring Amazon S3: Generic S3 error: Missing bucket name"
         );
     }
 
     #[test]
     #[cfg(feature = "gcp")]
     fn valid_google_config() {
+        use std::io::Write;
+        use tempfile::NamedTempFile;
+
+        let mut file = NamedTempFile::new().expect("tempfile should be created");
+        const FAKE_KEY: &str = r#"{"private_key": "private_key", "client_email":"client_email", "disable_oauth":true}"#;
+        writeln!(file, "{FAKE_KEY}").unwrap();
+        let path = file.path().to_str().expect("file path should exist");
+
         let config = ObjectStoreConfig::try_parse_from([
             "server",
             "--object-store",
@@ -511,12 +522,15 @@ mod tests {
             "--bucket",
             "mybucket",
             "--google-service-account",
-            "~/Not/A/Real/path.json",
+            path,
         ])
         .unwrap();
 
         let object_store = make_object_store(&config).unwrap();
-        assert_eq!(&object_store.to_string(), "GoogleCloudStorage(mybucket)")
+        assert_eq!(
+            &object_store.to_string(),
+            "LimitStore(16, GoogleCloudStorage(mybucket))"
+        )
     }
 
     #[test]
@@ -532,8 +546,7 @@ mod tests {
 
         assert_eq!(
             err,
-            "Specified Google for the object store, required configuration missing for \
-            bucket, google-service-account"
+            "Error configuring GCS: Generic GCS error: Missing bucket name"
         );
     }
 
@@ -554,7 +567,7 @@ mod tests {
         .unwrap();
 
         let object_store = make_object_store(&config).unwrap();
-        assert_eq!(&object_store.to_string(), "MicrosoftAzure(mybucket)")
+        assert_eq!(&object_store.to_string(), "LimitStore(16, MicrosoftAzure { account: NotARealStorageAccount, container: mybucket })")
     }
 
     #[test]
@@ -570,8 +583,7 @@ mod tests {
 
         assert_eq!(
             err,
-            "Specified Azure for the object store, required configuration missing for \
-            bucket, azure-storage-account, azure-storage-access-key"
+            "Error configuring Microsoft Azure: Generic MicrosoftAzure error: Container name must be specified"
         );
     }
 

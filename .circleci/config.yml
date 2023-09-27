@@ -270,6 +270,9 @@ jobs:
       - run:
           name: cargo test --workspace
           command: cargo test --workspace
+      - run:
+          name: cargo test -p clap_blocks --features=aws,gcp,azure
+          command: cargo test -p clap_blocks --features=aws,gcp,azure
 
 
   # end to end tests with Heappy (heap profiling enabled)

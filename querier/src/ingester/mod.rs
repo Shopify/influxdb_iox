@@ -16,6 +16,7 @@ use uuid::Uuid;
 
 pub(crate) mod test_util;
 mod v1;
+mod v2;
 
 /// Create a new set of connections given ingester configurations
 pub fn create_ingester_connections(
